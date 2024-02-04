@@ -64,6 +64,10 @@ return function (RouteBuilder $routes): void {
          */
         $builder->connect('/pages/*', 'Pages::display');
 
+        $builder->setExtensions(['json']);
+
+        $builder->resources('Users');
+
         $builder->resources('Articles');
 
         /*
