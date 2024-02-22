@@ -32,82 +32,197 @@ Set up the database:
 bin/cake migrations migrate
 ```
 
-### Accessing the Application
+Set up the sample:
 
-The application should now be accessible at http://localhost:34251
-
-## How to check
-
-### RUN migrate && seed
 ```
-bin/cake migrations migrate
-
 bin/cake migrations seed --seed UsersSeed
+```
+```
 bin/cake migrations seed --seed ArticlesSeed
 ```
 
+### Accessing the Application
+
+The homepage should now be accessible at http://localhost:34251
+
+## How to check
+
+- Use POSTMAN to check API
+
 ### Authentication
 
-TODO: pls summarize how to check "Authentication" behavior
+User account:
+
 ```
-Use plugin api-token-authenticator to check authentication api
-- Use package "rrd108/api-token-authenticator" to authentication
-- Add field token for User table
-- To authenticate the token, add the "token" parameter to the header when calling the API.
-- Use the login API to obtain the token.
-- Actions such as "view," "index," and "login" do not require authentication.
+email: "admin@vti.com.vn"
+password: "123456"
 ```
+```
+email: "user@vti.com.vn"
+password: "123456"
+```
+
+Logout API
+
+```
+GET: http://localhost:34251/users/logout.json
+```
+
+Login to get token
+
+```
+POST: http://localhost:34251/users/login.json
+    body {"email": "admin@vti.com.vn", "password": "123456"}
+```
+
+#### Get the token from login API to setup Authorization in Postman
+
+<img src="https://img001.prntscr.com/file/img001/4gH8J4fMQ3KSl43J-SZZsg.png" alt="Authentication setup" style="width:800px;"/>
 
 ### Article Management
 
-TODO: pls summarize how to check "Article Management" behavior
+1. ### Getting list articles
+
 ```
-- Create a model and controller for articles.
-- Utilize the viewClasses function within the ArticlesController.
-- Add the JSON extension and the Article resource to the routes.
-- Authenticate the "add" and "edit" API based on the configuration settings for authentication.
-- Make the "view" and "index" API public, not requiring authentication.
-- Implement additional checks for author conditions in the "edit" and "delete" API.
+GET: http://localhost:34251/articles.json
+
+Response: articles array
+```
+
+2. ###  Get article
+
+```
+GET: http://localhost:34251/articles/1.json
+
+Response: articles object
+```
+
+
+3. ###  Create an article
+
+- Case 1: login user
+
+```
+POST: http://localhost:34251/articles.json
+    body {"title": "create test article", "body": "create test article"}
+    
+    Response: "created".
+```
+
+- Case 2: Guest user ( logout first )
+
+```
+POST: http://localhost:34251/articles.json
+    body {"title": "Not authenticated user Title", "body": "Not authenticated user Body"}
+    
+    Response: "Authentication is required to continue",
+```
+- 
+- Case 3: no body
+
+```
+POST: http://localhost:34251/articles.json
+
+Response: "Error."
+```
+
+4. ###  Edit an article
+
+- Case 1: login user and the writer (login by user 'admin@vti.com.vn')
+
+```
+PUT: http://localhost:34251/articles/1.json
+    {"title": "Update article", "body": "Update article"}
+    
+    Response: "Updated"
+```
+
+- Case 2: login user and NOT the writer (login by user 'user@vti.com.vn').
+
+```
+PUT: http://localhost:34251/articles/1.json
+    {"title": "updated other writer title", "body": "updated other writer body"}
+    
+    Response: "Unauthorized,
+```
+
+- Case 3: Guest user ( require logout )
+
+```
+PUT: http://localhost:34251/articles/1.json
+    {"title": "guest title", "body": "Guest body"}
+    
+    Response: "Authentication is required to continue",
+```
+
+5. ###  Delete an article
+
+- Case 1: login user and the writer (require login by user 'user@vti.com.vn')
+
+```
+DELETE: http://localhost:34251/articles/2.json
+
+Response: "Deleted"
+```
+
+- Case 2: login user and NOT the writer (require login by user 'admin@vti.com.vn').
+
+```
+DELETE: http://localhost:34251/articles/2.json
+
+Response: "Unauthorized",
+```
+
+- Case 3: Guest user ( require logout )
+
+```
+DELETE: http://localhost:34251/articles/1.json
+
+Response: "Authentication is required to continue",
 ```
 
 ### Like Feature
 
-TODO: pls summarize how to check "Like Feature" bahavior
+1. ###  Like an article
+
+- Case 1: login user (require login)
+
 ```
-- Create a "likes" table.
-- Add the "total_like" field to the "articles" table to count the total number of likes for each article.
-- Use the "CounterCache" behavior to update the number of likes for an article.
-- Create a "like" action in the "ArticlesController."
-- When calling the like API, check for authentication conditions and whether the article has already been liked. If not, like the article.
+GET: http://localhost:34251/articles/like/1.json
+
+Response: "Liked successfully."
 ```
 
+- Case 2: login user & liked article (require login)
 
-LOGIN info:
 ```
-email: "admin@vti.com.vn"
-password: "123456'
-```
-```
-AUTHENTICATION
-header param
-Token:"key-from-login-api"
-```
-USER API
-```
-POST: http://localhost:34251/users/login.json
-body {"email": "admin@vti.com.vn", "password": "123456"}
-GET: http://localhost:34251/users/logout.json
-POST: http://localhost:34251/users.json
-body {"email": "email@email.com", "password": "password"}
-```
-ARTICLES API
+GET: http://localhost:34251/articles/like/1.json
+
+Response: "You liked it before."
 ```
 
+- Case 3: guest user
+
+```
+GET: http://localhost:34251/articles/like/1.json
+
+Response: "Authentication is required to continue"
+```
+
+2. ###  Like count
+
+- Case 1: detail article
+
+```
+GET: http://localhost:34251/articles/1.json
+
+Response: an article object with "total_like" field
+```
+
+- Case 2: list article
+
+```
 GET: http://localhost:34251/articles.json
-POST: http://localhost:34251/articles.json
-body {"title": "title", "body": "body"}
-PUT: http://localhost:34251/articles/{id}.json
-ody {"title": "title", "body": "body"}
-DELETE: http://localhost:34251/articles/{id}.json
-GET: http://localhost:34251/articles/like/{id}.json
+
+Response: an array of articles object with "total_like" field
 ```
